@@ -16,10 +16,10 @@ ch_name = "・🤖・lily-log"
 
 def _prefix_callable(bot: commands.Bot, msg: discord.Message) -> str:
     if msg.guild is None:
-        return "_"
+        return "lily."
     else:
         if msg.guild.me.nick is None:
-            return "_"
+            return "lily."
         nick = msg.guild.me.display_name
         result = nick.replace("[", "").replace(f"]{bot.user.name}", "")
         return result
@@ -288,7 +288,7 @@ async def on_guild_join(guild):
     for guild in bot.guilds:
       members += guild.member_count - 1
     member_count = guild.member_count
-    await bot.change_presence(activity=discord.Game(name=f"_help┃{str(servers)}servers┃{str(members)}users┃prefix：_ ┃Ver.1.7.0"))
+    await bot.change_presence(activity=discord.Game(name=f"lily.help┃{str(servers)}servers┃{str(members)}users┃prefix：lily. ┃Ver.1.7.0"))
 
 @bot.event
 async def on_guild_remove(guild):
@@ -296,7 +296,7 @@ async def on_guild_remove(guild):
   members = 0
   for guild in bot.guilds:
     members += guild.member_count - 1
-  await bot.change_presence(activity=discord.Game(name=f"_help┃{str(servers)}servers┃{str(members)}users┃prefix：_ ┃Ver.1.7.0"))
+  await bot.change_presence(activity=discord.Game(name=f"lily.help┃{str(servers)}servers┃{str(members)}users┃prefix：lily. ┃Ver.1.7.0"))
 
 @bot.event
 async def on_ready():
@@ -304,7 +304,7 @@ async def on_ready():
   members = 0
   for guild in bot.guilds:
     members += guild.member_count - 1
-    await bot.change_presence(activity=discord.Game(name=f"_help┃{str(servers)}servers┃{str(members)}users┃prefix：_ ┃Ver.1.7.0"))
+    await bot.change_presence(activity=discord.Game(name=f"lily.help┃{str(servers)}servers┃{str(members)}users┃prefix：lily. ┃Ver.1.7.0"))
   print('起動完了')
   
   for channel in bot.get_all_channels():
