@@ -1,5 +1,6 @@
 import discord
 import json
+
 import asyncio
 from discord.ext import commands
 from discord import Message, Guild, TextChannel, Permissions
@@ -11,6 +12,7 @@ import urllib.parse
 from datetime import datetime
 import sqlite3
 import pytz
+import requests
 
 ch_name = "・🤖・lily-log"
 
@@ -220,42 +222,6 @@ async def on_command_error(ctx, error):
     else:
         raise error
 
-c.execute("CREATE TABLE IF NOT EXISTS level(userid, level, exp)")
-@bot.listen("on_message")
-async def level_count(message):
-  if message.author.bot:
-    return
-  c.execute("SELECT * FROM level WHERE userid=?", (message.author.id,))
-  data=c.fetchone()
-  if data is None:
-    c.execute("INSERT INTO level VALUES(?, ?, ?)",(message.author.id, 1, 0))
-    conn.commit()
-    return
-  c.execute("UPDATE level set exp=? WHERE userid=?",(data[2]+1, message.author.id))
-  conn.commit()
-  c.execute("SELECT * FROM level WHERE userid=?", (message.author.id,))
-  data=c.fetchone()
-  if data[2] >= data[1]*5:
-    c.execute("UPDATE level set level=?,exp=? WHERE userid=?",(data[1]+1,0,message.author.id))
-    conn.commit()
-    embed=discord.Embed(title=f"> <a:S_GIF_peepoConfetti:941841907397574717>レベルアップ！", description=f"{message.author.mention}さんのレベルが**{data[1]}**に上がったよ〜！！", color=0xb18cfe)
-    embed.set_thumbnail(url=message.author.avatar_url)
-    await message.channel.send(embed=embed)
-
-@bot.command()
-async def rank(ctx, target:discord.User=None):
-  if target is None:
-    user=ctx.author
-  else:
-    user=target
-  c.execute("SELECT * FROM level WHERE userid=?", (user.id,))
-  data=c.fetchone()
-  if data is None:
-    await ctx.send("ユーザーが登録されてないよ＞＜")
-  e=discord.Embed(title=f"Lilyランク", description=f"`ランク`：**{data[1]-1}**\n`経験値`：**{data[2]}**", color=0xb18cfe)
-  e.set_thumbnail(url=user.avatar_url)
-  await ctx.send(embed=e)
-
 @bot.event
 async def on_member_join(member):
     if member.guild.system_channel:
@@ -356,6 +322,7 @@ async def command_list(ctx, type=None):
         "`unmute`：メンバーのミュートを解除します。\n"
         "`avatar`：メンバーのアバターを表示します。\n"
         "`banner`：メンバーのプロフィールバナーを表示します。\n"
+        "`gbanner`：メンバーのプロフィールバナー(GIF)を表示します。\n"
         "`slowmode`：低速モードを変更できます。\n"
         "`embed`：埋め込みメッセージを作成できます。\n",
     )
@@ -677,7 +644,7 @@ async def embed(ctx, title="title", description="description"):
   embed.set_author(name=str(ctx.author))
   await ctx.send(embed=embed)
 
-@bot.command(aliases=["ばなー"])
+@bot.command(aliases=["b"])
 async def banner(ctx, user:discord.Member=None):
     member = ctx.author
     if user == None:
@@ -695,7 +662,26 @@ async def banner(ctx, user:discord.Member=None):
         embed=discord.Embed(title="エラー", color=0xb18cfe)
         embed.add_field(name="バナーが設定されていません。", value="バナーが設定されている人を指定してください。")
         await ctx.send(embed=embed)
+        
+@bot.command(aliases=["gb"])
+async def gbanner(ctx, user:discord.Member=None):
+  rq_user = ctx.author
+  if user == None:
+    user = ctx.author
+    try:
+      req = await bot.http.request(discord.http.Route("GET", "/users/{uid}", uid=user.id))
+      banner_id = req["banner"]
+      if banner_id:
+        banner_url = f"https://cdn.discordapp.com/banners/{user.id}/{banner_id}.gif?size=1024"
+        embed=discord.Embed(title="Banner Link", description=f"{user.mention}'s banner", url = banner_url, color=0xb18cfe)
+        embed.set_image(url = banner_url)
+        embed.set_footer(text=str(f"コマンド実行者：{rq_user}"))
+        await ctx.send(embed=embed)
+    except:
+        embed=discord.Embed(title="エラー", color=0xb18cfe)
+        embed.add_field(name="バナーが設定されていません", value="バナーが設定されている人を指定してください。")
+        await ctx.send(embed=embed)
       
 Keep_alive.keep_alive()
 
-bot.run('TOKEN')
+bot.run(os.getenv('TOKEN'))
